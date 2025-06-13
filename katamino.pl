@@ -1,55 +1,67 @@
 :- use_module(piezas).
 
-% Ejercicio 1
-%! sublista(+D,+T,+L,-R)
-% genera una sublista
-sublista(D,T,L,R):- append(N,M,L),append(R,_,M),length(R,T),length(N,D).
+% -- Ej 1:
+sublista(Descartar, Tomar, Lista, Res) :- append(Descartado, NoDescartado, Lista), append(Res, _, NoDescartado), length(Res, Tomar), length(Descartado, Descartar).
 
+% -- Ej 2:
+tablero(K, T) :- length(T, 5), todosLongIguales(T, K).
+%revisar, tratar de hacer sin aux
 
-% Ejercicio 2 PREGUNTAR
-tablero(K,Xs):- length(Xs,5),tableroAux(K,Xs).
-tableroAux(_,[]).
-tableroAux(M,[H|T]):- length(H,M),tableroAux(M,T).
+todosLongIguales([], _).
+todosLongIguales([L | Ls], N) :- length(L, N), todosLongIguales(Ls, N).
 
-% Ejercicio 3, Preguntar si esta bien que se imprima el tablero
-tamaño([H|T],F,C):- length([H|T],F),length(H,C).
+% -- Ej 3:
+tamaño([Fila | Filas], Alto, Ancho) :- length(Fila, Ancho), length([Fila | Filas], Alto).
 
+% -- Ej 4:
+coordenadas([Fila | _Filas], IJ) :- length(Fila, M), between(1, 5, I), between(1, M, J), IJ = (I, J).
 
-% Ejercicio 4, BUG donde se queda buscando al final
-coordenadas([Fila | _], IJ) :- length(Fila, M), between(1, 5, I), between(1, M, J), IJ = (I, J).
+% -- Ej 5:
+kPiezas(K, PS) :- nombrePiezas(L), tomar(K, L, PS).
 
-%ejercicio 5 PREGUNTAR
-%insertar(X,L,Lx):- append(A,B,L),append(A,[X|B],Lx).		
+tomar(0, _XS, []).
+tomar(K, [X | XS], [X | TomarKm1DeXS]) :- K > 0, Km1 is K - 1, tomar(Km1, XS, TomarKm1DeXS).
+tomar(K, [_X | XS], TomarKDeXS) :- K > 0, length(XS, L), L >= K, tomar(K, XS, TomarKDeXS).
 
-%kPiezas(0,[]):-!.
-%kPiezas(K,[H|T]):-nombrePiezas(L),member(H, L),Km1 is K - 1,kPiezas(Km1,T),not(member(H,T)),sort([H|T],[H|T]).
+% -- Ej 6:
+seccionTablero(Tablero, Alto, Ancho, (I, J), Seccion) :- Im1 is I - 1, Jm1 is J - 1, sublista(Im1, Alto, Tablero, CorteAlto), subListar(CorteAlto, Jm1, Ancho, Seccion).
+%Por ahi se puede hacer mejor, revisar
 
-%kPiezas(1,[H]):-nombrePiezas(L),member(H, L).
-%kPiezas(K,[H1,H2|T]):-K>1,nombrePiezas(L),member(H1, L),Km1 is K - 1,kPiezas(Km1,[H2|T]),not(member(H1,[H2|T])),H1@=<H2.
+subListar([], _A, _B, []).
+subListar([L | LS], A, B, [Sublistado | Sublistados]) :- sublista(A, B, L, Sublistado), subListar(LS, A, B, Sublistados).
 
-%%anda pero es horrible, revisar
-%kPiezas(0, []) :- !.
-%kPiezas(12, L) :- nombrePiezas(L), !.
-%%kPiezas(K, [Letra | Cola]) :- nombrePiezas(L), member(Letra, L), Km1 is K - 1, kPiezas(Km1, Cola), sort([Letra | Cola], [Letra | Cola]).
-%kPiezas(K, PS) :- aux(K, PS, 0).
-%aux(0, [], _) :- !.
-%aux(K, [Letra | Letras], Count) :- Km1 is K - 1, Tomo is 12 - Count, CountM1 is Count + 1, nombrePiezas(Piezas), sublista(Count, Tomo, Piezas, %Opciones), member(Letra, Opciones), aux(Km1, Letras, CountM1), not(member(Letra, Letras)).
+% -- Ej 7:
+ubicarPieza([Fila | Tablero], Id):- pieza(Id, Pieza), tamaño(Pieza, AltoPieza, AnchoPieza), length(Fila, AnchoTablero), F2 is 6 - AltoPieza, C2 is AnchoTablero - AnchoPieza + 1, between(1, F2, I), between(1, C2, J), seccionTablero([Fila | Tablero], AltoPieza, AnchoPieza, (I,J), Pieza).
+%revisar, hacer mas declarativo
 
+% -- Ej 8:
+ubicarPiezas(_Tablero, _Poda, []). 
+ubicarPiezas(Tablero, Poda, [Id | Ids]) :- ubicarPieza(Tablero, Id), poda(Poda, Tablero), ubicarPiezas(Tablero, Poda, Ids).
 
-%Ejercicio 6
-seccionTablero(T,Alto,Ancho,(I,J),ST):- I2 is I-1, J2 is J-1, sublista(I2,Alto,T,R),seccionprima(R,Ancho,J2,ST).
-seccionprima([],_,_,[]).
-seccionprima([H|T],Ancho,J,[H1|T1]):- sublista(J,Ancho,H,H1),seccionprima(T,Ancho,J,T1).
-
-%ejercicio 7
-ubicarPieza(T,Id):- pieza(Id, Pieza), tamaño(Pieza,F,C),coordenadas(T,IJ),seccionTablero(T,F,C,IJ,Pieza).
-
-%ejercicio 8
 poda(sinPoda, _).
+poda(podaMod5, T) :- todosGruposLibresModulo5(T).
 
-ubicarPiezas(Tablero,[]).
-ubicarPiezas(Tablero,[H|T]):-ubicarPieza(Tablero,H),ubicarPiezas(Tablero,T).
+% -- Ej 9:
+llenarTablero(Poda, Columnas, Tablero) :- tablero(Columnas, Tablero), kPiezas(Columnas, Piezas), ubicarPiezas(Tablero, Poda, Piezas).
 
-%ejercicio 9
-llenarTablero(C,Tablero):- tablero(C,Tablero),kPiezas(C,Xs),ubicarPiezas(T,Xs).
+% -- Ej 10:
+cantSoluciones(Poda, Columnas, N) :- findall(T, llenarTablero(Poda, Columnas, T), TS), length(TS, N).
 
+% ?- time(cantSoluciones(sinPoda, 3, N)).
+%%19,214,618 inferences, 1.375 CPU in 1.381 seconds (100% CPU, 13974268 Lips)
+%N = 28.
+
+% ?- time(cantSoluciones(sinPoda, 4, N)).
+%% 1,020,317,265 inferences, 73.078 CPU in 73.521 seconds (99% CPU, 13962007 Lips)
+%N = 200.
+
+% -- Ej 11:
+todosGruposLibresModulo5(Tablero) :- todasCoordsLibres(Tablero, Coords), agrupar(Coords, Grupos), todosMod5(Grupos).
+
+todosMod5([]).
+todosMod5([X | XS]) :- length(X, L), 0 is mod(L, 5), todosMod5(XS).
+%revisar: Esto esta MAL, piden explicitamente que no sea recursivo
+
+coordLibre((I, J), T) :- nth1(I, T, FilaIesima), nth1(J, FilaIesima, Pos), var(Pos).
+
+todasCoordsLibres(T, Res) :- findall(IJ, coordLibre(IJ, T), Res).
